@@ -6,6 +6,7 @@ namespace DenverSera\CommissionTask\Services;
 
 use DenverSera\CommissionTask\Entities\Transaction;
 use DenverSera\CommissionTask\Entities\CurrencyExchange;
+use DenverSera\CommissionTask\ErrorHandlers\EmptyDataErrorException;
 
 /**
  * CommissionFeeService
@@ -39,8 +40,12 @@ class CommissionFeeService
         $amount = $transaction->getAmount();
         $toCurrency = $transaction->getCurrency();
 
-        if ($amount === '') {
-            return 0.0;
+        if ($amount === '' || empty($amount)) {
+            throw new EmptyDataErrorException('Transaction amount is empty. Invalid transaction details.', 'CommissionFeeService@calculate');
+        }
+
+        if ($toCurrency === '' || empty($toCurrency)) {
+            throw new EmptyDataErrorException('Transaction currency is empty. Invalid transaction details.', 'CommissionFeeService@calculate');
         }
 
         // if the transacted currency is not Euro
@@ -48,14 +53,24 @@ class CommissionFeeService
         if ($toCurrency !== 'EUR') {
             $exchangeRates = $currencyExchange->getExchangeRates();
 
-            $rates = $exchangeRates ? $exchangeRates->rates : null;
-
-            if ($rates !== null) {
-                $toCurrencyRate = (string) $rates->{$toCurrency};
-                
-                // currency rate conversion
-                $amount = bcdiv($amount, $toCurrencyRate, 4);
+            if ($exchangeRates === null || empty($exchangeRates)) {
+                throw new EmptyDataErrorException('Exchanges rates are empty. Invalid transaction calculation.', 'CommissionFeeService@calculate');
             }
+
+            $rates = $exchangeRates->rates;
+
+            if ($rates === null) {
+                throw new EmptyDataErrorException('Rates property not found. Please check object properties.', 'CommissionFeeService@calculate');
+            }
+
+            $toCurrencyRate = $rates->{$toCurrency};
+
+            if ($toCurrencyRate === null || empty($toCurrencyRate)) {
+                throw new EmptyDataErrorException("Exchanges rate for {$toCurrency} not found. Please check exchange rates provider.", 'CommissionFeeService@calculate');
+            }
+            
+            // currency rate conversion
+            $amount = bcdiv($amount, (string) $toCurrencyRate, 4);
         }
       
         if ($isEuMember) {

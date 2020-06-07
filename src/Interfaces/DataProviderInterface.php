@@ -12,12 +12,12 @@ namespace DenverSera\CommissionTask\Interfaces;
 interface DataProviderInterface
 {
     /**
-     * Sets the source data within the class
+     * Fetch the data from the data source
      *
      * @return void
      */
-    public function setSourceData();
-    
+    public function fetchData();
+
     /**
      * Outputs the data to object
      *

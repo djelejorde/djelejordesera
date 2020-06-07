@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DenverSera\CommissionTask\Entities;
 
+use DenverSera\CommissionTask\ErrorHandlers\EmptyDataErrorException;
+
 /**
  * EuropeanUnionMembers
  */
@@ -24,6 +26,10 @@ class EuropeanUnionMembers
      */
     public function isEuMember(string $countryCode) : bool
     {
+        if (count($this->memberCountryCodes) === 0) {
+            throw new EmptyDataErrorException('Member codes empty. Assign EU country codes first.', 'EuropeanUnionMembers@isEuMember');
+        }
+
         return in_array($countryCode, $this->memberCountryCodes);
     }
 
