@@ -14,7 +14,7 @@ use stdClass;
  *
  *
  */
-class CardBank
+class Bank
 {
     /**
      * The bank data object where the card was issued
@@ -60,26 +60,5 @@ class CardBank
         $this->bank = $bank;
 
         return $this;
-    }
-
-    /**
-     * Gets a property within the Card Bank entitry dynamically
-     *
-     * @param string $propertyName
-     * @return mixed
-     */
-    public function getProperty(string $propertyName)
-    {
-        $bank = $this->getBank();
-
-        if ($bank === null || empty($bank)) {
-            throw new DataTypeMismatchErrorException('Bank object is not defined.', 'CardBank');
-        }
-
-        if (!isset($bank->{$propertyName})) {
-            throw new DataTypeMismatchErrorException('Property: '. $propertyName . ' is not defined in the bank object.', 'CardBank');
-        }
-
-        return $bank->{$propertyName};
     }
 }

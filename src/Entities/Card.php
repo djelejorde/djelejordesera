@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace DenverSera\CommissionTask\Entities;
 
-use DenverSera\CommissionTask\Entities\CardBank;
-use DenverSera\CommissionTask\Entities\CardCountry;
+use DenverSera\CommissionTask\Entities\Bank;
+use DenverSera\CommissionTask\Entities\Country;
 
 use stdClass;
 
@@ -24,7 +24,21 @@ class Card
      * @var object
      */
     private $card;
-    
+
+    /**
+     * The Bank entity
+     *
+     * @var Bank
+     */
+    private $bank;
+
+    /**
+     * The Country entity
+     *
+     * @var Country
+     */
+    private $country;
+
     /**
      * Class constructor
      */
@@ -50,21 +64,21 @@ class Card
     /**
      * Gets the card country entity
      *
-     * @return CardCountry
+     * @return Country
      */
-    public function getCountry() : CardCountry
+    public function getCountry() : Country
     {
-        return $this->card->country;
+        return $this->country;
     }
 
     /**
      * Gets the card bank entity
      *
-     * @return CardBank
+     * @return Bank
      */
-    public function getBank() : CardBank
+    public function getBank() : Bank
     {
-        return $this->card->bank;
+        return $this->bank;
     }
 
     /*
@@ -87,12 +101,12 @@ class Card
     /**
      * Sets the card bank entity
      *
-     * @param CardBank $bank
+     * @param Bank $bank
      * @return self
      */
-    public function setBank(CardBank $bank) : self
+    public function setBank(Bank $bank) : self
     {
-        $this->card->{'bank'} = $bank;
+        $this->bank = $bank;
 
         return $this;
     }
@@ -100,12 +114,12 @@ class Card
     /**
      * Sets the card country entity
      *
-     * @param CardCountry $country
+     * @param Country $country
      * @return self
      */
-    public function setCountry(CardCountry $country) : self
+    public function setCountry(Country $country) : self
     {
-        $this->card->{'country'} = $country;
+        $this->country = $country;
 
         return $this;
     }

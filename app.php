@@ -13,14 +13,18 @@ use DenverSera\CommissionTask\Entities\Transaction;
 use DenverSera\CommissionTask\Entities\EuropeanUnionMembers;
 use DenverSera\CommissionTask\Entities\CurrencyExchange;
 use DenverSera\CommissionTask\DataProviders\ThirdPartyApiDataProvider;
+use DenverSera\CommissionTask\ErrorHandlers\EmptyDataErrorException;
 use DenverSera\CommissionTask\ErrorHandlers\FileNotFoundErrorException;
 
 // check if php has arguments
 if (isset($argc)) {
-    
-    // checks the second parameter on CLI
-    if (!isset($argv[1])) {
-        throw new FileNotFoundErrorException('File name parameter not found. Filename should not be empty.', 'app.php');
+    try {
+        // checks the second parameter on CLI
+        if (!isset($argv[1])) {
+            throw new FileNotFoundErrorException('File name parameter not found. Filename should not be empty.', 'app.php');
+        }
+    } catch (FileNotFoundErrorException $e) {
+        echo $e->getMessage();
     }
 
     // Call the JSON reader service to read the file
@@ -35,32 +39,44 @@ if (isset($argc)) {
             $transaction->setAmount($data->amount);
             $transaction->setCurrency($data->currency);
 
-            // BIN request
-            $binListCardMetaDataProvider = new ThirdPartyApiDataProvider(new HttpRequestService(), new HttpResponseOutputterService());
-            $binListCardMetaDataProvider->setApiUrl('https://lookup.binlist.net/'. $data->bin);
+            try {
+                // BIN request
+                $binListCardMetaDataProvider = new ThirdPartyApiDataProvider(new HttpRequestService(), new HttpResponseOutputterService());
+                $binListCardMetaDataProvider->setApiUrl('https://lookup.binlist.net/'. $data->bin);
+            
 
-            // get BIN API response and output to object
-            $cardMeta = $binListCardMetaDataProvider->fetchData()->outputDataToObject();
+                // get BIN API response and output to object
+                $cardMeta = $binListCardMetaDataProvider->fetchData()->outputDataToObject();
+            } catch (Exception $e) {
+                echo $e->getMessage();
+
+                exit;
+            }
 
             // normalize card meta into entities
             $cardNormalizer = new CardNormalizerService($cardMeta);
-            $cardNormalizer->mapCountry('country');
-            // another example if bank properties needs to be mapped
-            $cardNormalizer->mapBank('bank');
 
             // get the normalized card entity
             $card = $cardNormalizer->getNormalizedCardEntity();
+            
+            // get the country entity within card entity
+            $country = $card->getCountry();
 
             // get the country code
-            $country = $card->getCountry();
-            $countryCode = $country->getProperty('alpha2');
+            $countryCode = $country->getCountryCode();
 
-            // Exchange rates
-            $euCurrencyRatesDataProvider = new ThirdPartyApiDataProvider(new HttpRequestService(), new HttpResponseOutputterService());
-            $euCurrencyRatesDataProvider->setApiUrl('https://api.exchangeratesapi.io/latest');
+            try {
+                // Exchange rates
+                $euCurrencyRatesDataProvider = new ThirdPartyApiDataProvider(new HttpRequestService(), new HttpResponseOutputterService());
+                $euCurrencyRatesDataProvider->setApiUrl('https://api.exchangeratesapi.io/latest');
 
-            // get EU currency rates API response and output to object
-            $currencyRates = $euCurrencyRatesDataProvider->fetchData()->outputDataToObject();
+                // get EU currency rates API response and output to object
+                $currencyRates = $euCurrencyRatesDataProvider->fetchData()->outputDataToObject();
+            } catch (Exception $e) {
+                echo $e->getMessage();
+
+                exit;
+            }
 
             // set the response to Currency Exchange entity
             $currencyExchange = new CurrencyExchange();
@@ -99,15 +115,21 @@ if (isset($argc)) {
                 'SI',
                 'SK'
             ]);
-            
-            // check if the country code from the Card object is member of EU
-            $isEuMember = $euMembers->isEuMember($countryCode);
-            
-            // calculate the commission fee using the currency exhange and transaction data
-            $commissionFeeService = new CommissionFeeService();
-            $commissionFee = $commissionFeeService->calculate($transaction, $currencyExchange, $isEuMember);
 
-            print_r($commissionFee . "\n");
+            try {
+                // check if the country code from the Card object is member of EU
+                $isEuMember = $euMembers->isEuMember($countryCode);
+
+                // calculate the commission fee using the currency exhange and transaction data
+                $commissionFeeService = new CommissionFeeService();
+                $commissionFee = $commissionFeeService->calculate($transaction, $currencyExchange, $isEuMember);
+
+                print_r($commissionFee . "\n");
+            } catch (EmptyDataErrorException $e) {
+                echo $e->getMessage();
+
+                break;
+            }
         }
     }
 }

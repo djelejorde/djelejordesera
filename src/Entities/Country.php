@@ -14,7 +14,7 @@ use stdClass;
  *
  *
  */
-class CardCountry
+class Country
 {
     /**
      * The country data object where the card was issued
@@ -22,6 +22,13 @@ class CardCountry
      * @var object
      */
     private $country;
+
+    /**
+     * The country code
+     *
+     * @var string
+     */
+    private $countryCode;
     
     /**
      * Class constructor
@@ -46,24 +53,13 @@ class CardCountry
     }
 
     /**
-     * Gets a property within the Card Country entitry dynamically
+     * Gets the country code
      *
-     * @param string $propertyName
-     * @return mixed
+     * @return string
      */
-    public function getProperty(string $propertyName)
+    public function getCountryCode() : string
     {
-        $country = $this->getCountry();
-
-        if ($country === null || empty($country)) {
-            throw new DataTypeMismatchErrorException('Country object is not defined.', 'CardCountry');
-        }
-
-        if (!isset($country->{$propertyName})) {
-            throw new DataTypeMismatchErrorException('Property: '. $propertyName . ' is not defined in the country object.', 'CardCountry');
-        }
-
-        return $country->{$propertyName};
+        return $this->countryCode;
     }
 
     /*
@@ -79,6 +75,19 @@ class CardCountry
     public function setCountry(object $country) : self
     {
         $this->country = $country;
+
+        return $this;
+    }
+
+    /**
+     * Sets the country code
+     *
+     * @param string $countryCode
+     * @return self
+     */
+    public function setCountryCode(string $countryCode) : self
+    {
+        $this->countryCode = $countryCode;
 
         return $this;
     }

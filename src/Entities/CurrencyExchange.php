@@ -25,9 +25,9 @@ class CurrencyExchange
     /**
      * Gets the exchange rates data
      *
-     * @return object
+     * @return object|null
      */
-    public function getExchangeRates() : object
+    public function getExchangeRates() : ?object
     {
         return $this->exchangeRates;
     }

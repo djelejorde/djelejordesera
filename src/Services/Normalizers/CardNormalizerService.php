@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace DenverSera\CommissionTask\Services\Normalizers;
 
 use DenverSera\CommissionTask\Entities\Card;
-use DenverSera\CommissionTask\Entities\CardBank;
-use DenverSera\CommissionTask\Entities\CardCountry;
+use DenverSera\CommissionTask\Entities\Bank;
+use DenverSera\CommissionTask\Entities\Country;
 use DenverSera\CommissionTask\ErrorHandlers\DataTypeMismatchErrorException;
 
 class CardNormalizerService
@@ -17,20 +17,6 @@ class CardNormalizerService
      * @var Card
      */
     private $card;
-
-    /**
-     * The card country entity
-     *
-     * @var CardCountry
-     */
-    private $cardCountry;
-
-    /**
-     * The card bank entity
-     *
-     * @var CardBank
-     */
-    private $cardBank;
 
     /**
      * The card object
@@ -49,17 +35,15 @@ class CardNormalizerService
         $this->cardObject = $cardObject;
 
         $this->card = new Card();
-        $this->cardCountry = new CardCountry();
-        $this->cardBank = new CardBank();
     }
 
     /**
      * Maps the country object to Card Country entity
      *
      * @param string $cardPropertyName
-     * @return void
+     * @return Country
      */
-    public function mapCountry(string $cardPropertyName) : void
+    private function mapCountry(string $cardPropertyName) : Country
     {
         if ($this->cardObject === null || empty($this->cardObject)) {
             throw new DataTypeMismatchErrorException('Mapping failed. Card object is not defined or empty.', 'CardNormalizer@mapCountry');
@@ -69,7 +53,11 @@ class CardNormalizerService
             throw new DataTypeMismatchErrorException('Country is not defined in the card object.', 'CardNormalizer@mapCountry');
         }
 
-        $this->cardCountry->setCountry($this->cardObject->{$cardPropertyName});
+        $country = $this->cardObject->{$cardPropertyName};
+        
+        return (new Country())
+                ->setCountry($country)
+                ->setCountryCode($country->alpha2);
     }
 
     /**
@@ -78,7 +66,7 @@ class CardNormalizerService
      * @param string $cardPropertyName
      * @return void
      */
-    public function mapBank(string $bankPropertyName) : void
+    private function mapBank(string $bankPropertyName) : Bank
     {
         if ($this->cardObject === null || empty($this->cardObject)) {
             throw new DataTypeMismatchErrorException('Mapping failed. Card object is not defined or empty.', 'CardNormalizer@mapBank');
@@ -88,7 +76,8 @@ class CardNormalizerService
             throw new DataTypeMismatchErrorException('Bank is not defined in the card object.', 'CardNormalizer@mapBank');
         }
 
-        $this->cardBank->setBank($this->cardObject->{$bankPropertyName});
+        return (new Bank())
+                ->setBank($this->cardObject->{$bankPropertyName});
     }
 
     /**
@@ -98,10 +87,16 @@ class CardNormalizerService
      */
     public function getNormalizedCardEntity() : Card
     {
-        $this->card->setBank($this->cardBank);
+        try {
+            // set the bank within card entity
+            $this->card->setBank($this->mapBank('bank'));
 
-        $this->card->setCountry($this->cardCountry);
+            // set the country within the card entity
+            $this->card->setCountry($this->mapCountry('country'));
 
-        return $this->card;
+            return $this->card;
+        } catch (DataTypeMismatchErrorException $e) {
+            echo $e->getMessage();
+        }
     }
 }
