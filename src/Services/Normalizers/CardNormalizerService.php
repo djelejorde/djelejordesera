@@ -40,20 +40,20 @@ class CardNormalizerService
     /**
      * Maps the country object to Card Country entity
      *
-     * @param string $cardPropertyName
+     * @param string $countryPropertyName
      * @return Country
      */
-    private function mapCountry(string $cardPropertyName) : Country
+    private function mapCountry(string $countryPropertyName) : Country
     {
         if ($this->cardObject === null || empty($this->cardObject)) {
             throw new DataTypeMismatchErrorException('Mapping failed. Card object is not defined or empty.', 'CardNormalizer@mapCountry');
         }
 
-        if (!isset($this->cardObject->{$cardPropertyName}) && gettype($this->cardObject->{$cardPropertyName}) !== 'object') {
+        if (!isset($this->cardObject->{$countryPropertyName}) && gettype($this->cardObject->{$countryPropertyName}) !== 'object') {
             throw new DataTypeMismatchErrorException('Country is not defined in the card object.', 'CardNormalizer@mapCountry');
         }
 
-        $country = $this->cardObject->{$cardPropertyName};
+        $country = $this->cardObject->{$countryPropertyName};
         
         return (new Country())
                 ->setCountry($country)
